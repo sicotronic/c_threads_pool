@@ -1,0 +1,38 @@
+This is a Thread Pool implementation to manage several threads to perform a task concurrently.
+
+In order to show how this project work a test that finds if a number is prime or not was provided.
+
+For this project, the files: task.c, task.h, task_queue.h, thread_pool.h and test_thread_pool.c where provided by the teacher.
+I had to implement the files: task_queue.c and thread_pool.c
+
+The ADT called Thread Pool was made with a structure that has:
+* the pool of threads itself as an array of p_thread pointers.
+* the queue of tasks: a synchronized queue also implemented.
+* a counter for the amount of threads that are in the pool.
+* a counter of the finished threads, to handle the destruction of the thread pool.
+* a mutex, to modify synchronously the variable of the already finished ones.
+* a variable that indicates that the execution of a thread must be finished.
+
+This was implemented with a Producer-Consumer approach:
+
+task_consum: this is the function that each thread use to take tasks continously from the task queue that is already synchronized. (Consumer)
+
+thread_pool_create: creates a thread pool ready to use, in which each thread will execute the function task_consum until it receives the signal that it has to finish.
+
+thread_pool_execute_task: this is a simple function that adds tasks to the task queue. (Producer)
+
+thread_pool_destroy: it sends the signal to all the threads that they have to finish, and after checking that everything is ready to finish it destroys the thread pool.
+
+There is a critial section within the thread pool, in the task_consum function.
+After the must finish signal is sent, all the threads are not allowed to get into that while, and they must say if they finished adding 1 to the counter of finished threads, and this has to be done synchronously, that's why I used a mutex.
+
+
+The ADT synchronized task queue was also implemented.
+
+The synchronization was important when several threads try to perform the following operations:
+* when the queue is full: In this case the producer should not be able to add more tasks.
+* when the queue is empy: In this case the consumer should not be able to take more tasks.
+If this is not handled properly, there might be errors when updating the information contained in the structures of this data types.
+
+To solve this, we used the libraries pthread.h and semaphore.h which have useful tools to control the critical sections of our algorithms, such as pthread_mutex_t and sem_t.
+Both of them were used in the task_queue_pop and task_queue_push functions to control the access of each thread to the critical section that process the input and output of the queue.
